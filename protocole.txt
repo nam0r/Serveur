@@ -1,0 +1,22 @@
+HashMap<ArrayList>
+
+Ce qu'on doit pouvoir faire :
+  - récupérer la liste des surnoms à partir d'un nom
+  - enregistrer un nouveau surnom et un nom associé
+
+get (sans paramètre) : affiche la liste de toutes les correspondances nom -> surnoms stockées (id = 1)
+get Roman : affiche la correspondance Roman -> surnoms
+register Roman Geek [Toto1 Toto2 Toto3] : Enregistre la correspondance Roman -> Geek (et éventuellement d'autres) (id = 2)
+update Roman Nom1 [Toto4 Toto5 Toto6] : Modifie la liste des surnoms associés à Roman
+
+RequestObject:
+  int id;
+  String name;
+  ArrayList<String> surnames;
+
+AnswerObject:
+  boolean success;
+  String descr;
+
+
+En interne : register = update
