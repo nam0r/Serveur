@@ -1,1 +1,6 @@
 http://help.github.com/linux-set-up-git/
+
+change un fichier
+git add .
+git commit -m "commentaire"
+git push
