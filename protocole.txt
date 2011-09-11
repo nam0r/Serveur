@@ -1,22 +1,72 @@
-HashMap<ArrayList>
-
-Ce qu'on doit pouvoir faire :
+Services offerts par le serveur :
   - récupérer la liste des surnoms à partir d'un nom
   - enregistrer un nouveau surnom et un nom associé
 
-get (sans paramètre) : affiche la liste de toutes les correspondances nom -> surnoms stockées (id = 1)
-get Roman : affiche la correspondance Roman -> surnoms
-register Roman Geek [Toto1 Toto2 Toto3] : Enregistre la correspondance Roman -> Geek (et éventuellement d'autres) (id = 2)
-update Roman Nom1 [Toto4 Toto5 Toto6] : Modifie la liste des surnoms associés à Roman
 
-RequestObject:
-  int id;
-  String name;
-  ArrayList<String> surnames;
+=================================================
+== Si on faisait une sérialisation par chaînes ==
+=================================================
 
-AnswerObject:
-  boolean success;
-  String descr;
+On définit des requêtes proches du langage SQL :
+
+  get (sans paramètre) : renvoie la liste de toutes les correspondances nom -> surnoms stockées (id = 1)
+  get Roman : renvoie la correspondance Roman -> surnoms
+  register Roman Surnom1 [Surnom2 Surnom3...] : Enregistre la correspondance Roman -> Surnom1 (et éventuellement d'autres) (id = 2)
+  update Roman Surnom1 [Surnom2 Surnom3...] : Modifie la liste des surnoms associés à Roman (en interne : register = update, simple alias)
+
+On peut aussi ajouter les requêtes suivantes (non demandées dans l'énoncé mais utiles dans un cas réel) :
+  add Roman Surnom1 [Surnom2 Surnom3...] : ajoute le surnom Surnom1 (et éventuellement d'autres) au nom Roman (sans supprimer les surnoms déjà associés contrairement à update)
+  remove (sans paramètre) : supprime tous les noms et leurs surnoms associés
+  remove Roman : supprime le nom Roman et tous les surnoms qui lui sont associés
+  remove Roman Surnom1 [Surnom2 Surnom3...] : supprime le surnom Surnom1 (et éventuellement d'autre) associé au nom Roman
+  
+
+================================
+== La sérialisation par objet ==
+================================
+
+Le serveur possèdera un attribut :
+  HashMap<String, ArrayList<String>> correspondances;
+une méthode permettant de lire la demande du client et de renvoyer une réponse adaptée :
+   AnswerObject answer(RequestObject requete);
+
+et des méthodes permettant d'effectuer des opérations sur cet attribut correspondant aux requêtes listées plus haut : 
+(note : la création de l'objet AnswerObject pourrait éventuellement être fait dans la méthode answer)
+  AnswerObject get();
+  AnswerObject get(String nom);
+  AnswerObject register(String nom, ArrayList<String> surnoms);
+  AnswerObject update(String nom, ArrayList<String> surnoms);
+et éventuellement :
+  AnswerObject add(String nom, ArrayList<String> surnoms);
+  AnswerObject remove();
+  AnswerObject remove(String nom);
+  AnswerObject remove(String nom, ArrayList<String> surnoms);
 
 
-En interne : register = update
+
+Afin de réaliser la communication client <-> serveur on utilise deux objets :
+  - un envoyé par le client au serveur qui contient la requête : RequestObject
+  - un renvoyé par le serveur au client qui contient la réponse : 
+
+Concrètement, ces objets possèdent les attributs suivants :
+
+	RequestObject:
+	  int id; // l'identifiant de la requête : get == 1, register == 2, update == 3...
+	  String name; // Un nom sur lequel porte la requête ("Roman" dans les exemples précédents) : peut être null (dans le cas de "get" sans paramètre et "remove" sans paramètre)
+	  ArrayList<String> surnames; // La liste des surnoms à ajouter (pour register & update) ou supprimer (pour remove). Peut être null.
+
+	  Ces attributs sont privés et on fournira un constructeur possédant trois paramètres (id, name, surnames) qui seront affectés aux attributs (ex: this.id = id;).
+
+
+
+	AnswerObject:
+	  boolean success; // Un booléen qui indique si tout s'est passé correctement ou s'il une erreur s'est produite lors du traitement côté serveur (ex: le nom demandé n'existe pas)
+	  String descr; // Une chaîne qui contient le message d'erreur ou de succès que l'utilisateur peut utiliser pour être informé de ce qu'il s'est passé.
+	  HashMap<String, ArrayList<String>> surnoms; // La liste des surnoms demandés (sous forme Nom -> [Surnom1, Surnom2...]) dans le cas d'un get. null sinon.
+
+	  Ces attributs sont privés et on fournira des accesseurs (getters) pour chacun afin de permettre au client de les récupérer.
+
+Notes :
+  - il faudra donner les .class de ces objets au client.
+  - est-il judicieux de communiquer les identifiants des requêtes sous forme d'entiers plutôt que sous forme de chaînes ?
+  - on pourrait utiliser des Set au lieu des ArrayList car la liste des surnoms ne contiendra pas de doublons.
