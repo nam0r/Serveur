@@ -1,3 +1,4 @@
+package main;
 import java.io.IOException;
 import java.net.ServerSocket;
 
@@ -6,7 +7,7 @@ public class MultiServer {
 	public static void main(String[] args) throws IOException {
 		ServerSocket serverSocket = null;
 		boolean listening = true;
-		final int port = 9999;
+		final int port = 9998;
 		
 		try {
 			serverSocket = new ServerSocket(port);
