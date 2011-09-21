@@ -5,7 +5,7 @@ import java.util.HashMap;
 
 public class GiveSurnames extends Answer {
 	
-	HashMap<String, ArrayList<String>> data; // le(s) nom(s)-surnom(s)
+	private HashMap<String, ArrayList<String>> data; // le(s) nom(s)-surnom(s)
 	
 	public GiveSurnames(int id, boolean success, String message,
 			HashMap<String, ArrayList<String>> data) {
@@ -15,6 +15,10 @@ public class GiveSurnames extends Answer {
 	
 	public HashMap<String, ArrayList<String>> getData() {
 		return this.data;
+	}
+	
+	public String toString() {
+		return this.data.toString();
 	}
 
 }

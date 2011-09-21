@@ -1,6 +1,8 @@
 package main;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MultiServer { 
 
@@ -8,6 +10,8 @@ public class MultiServer {
 		ServerSocket serverSocket = null;
 		boolean listening = true;
 		final int port = 9998;
+		HashMap<String, ArrayList<String>> correspondances = 
+				new HashMap<String, ArrayList<String>>();
 		
 		try {
 			serverSocket = new ServerSocket(port);
@@ -17,7 +21,7 @@ public class MultiServer {
 			System.exit(-1);
 		} 
 		while (listening) { 
-			new MultiServerThread(serverSocket.accept()).start();
+			new MultiServerThread(serverSocket.accept(), correspondances).start();
 		}
 		serverSocket.close();
 	}

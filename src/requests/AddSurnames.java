@@ -13,4 +13,5 @@ public class AddSurnames extends Request {
 	public HashMap<String, ArrayList<String>> getData() {
 		return this.data;
 	}
+
 }

@@ -1,5 +1,6 @@
 package main;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -18,33 +19,65 @@ import answers.GiveSurnames;
 public class MultiServerThread extends Thread {
 
 	private Socket socket = null;
+	private ObjectOutputStream oos = null;
+	private ObjectInputStream ois = null;
 
 	private HashMap<String, ArrayList<String>> correspondances;
 
-	public MultiServerThread(Socket socket) {
+	public MultiServerThread(Socket socket, 
+			HashMap<String, ArrayList<String>> correspondances) {
 		super("MultiServerThread");
 		this.socket = socket;
+		this.correspondances = correspondances;
 		
-		this.correspondances = new HashMap<String, ArrayList<String>>();
+		//PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+		try {
+			this.oos = new ObjectOutputStream(socket.getOutputStream());
+			this.ois = new ObjectInputStream(socket.getInputStream());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		//oos.close();
+		//ois.close();
+		//socket.close();
+		
 	}
 	
 	private GiveSurnames getAllSurnames(int id) {
-		HashMap<String, ArrayList<String>> surnames = 
-				new HashMap<String, ArrayList<String>>();
-		return new GiveSurnames(id, true, "Ok", surnames);
+		return new GiveSurnames(id, true, "Ok", correspondances);
 	}
 	
 	private GiveSurnames getSurnames(int id, ArrayList<String> names) {
 		HashMap<String, ArrayList<String>> surnames = 
 				new HashMap<String, ArrayList<String>>();
+		for(String name : names) {
+			surnames.put(name, correspondances.get(name));
+		}
 		return new GiveSurnames(id, true, "Ok", surnames);
 	}
 	
 	private Answer registerSurnames(int id, HashMap<String, ArrayList<String>> data) {
+		try {
+			correspondances.putAll(data);
+		} catch(NullPointerException e) {
+			return new Answer(id, false, "Error: null data.");
+		}
 		return new Answer(id, true, "Ok");
 	}
 	
-	private Answer updateSurnames(int id, HashMap<String, ArrayList<String>> data) {
+	private Answer addSurnames(int id, HashMap<String, ArrayList<String>> data) {
+		for(String name : data.keySet()) {
+			if(! correspondances.containsKey(name)) {
+				return new Answer(id, false, "The given name isn't registered: can't add.");
+			}
+			ArrayList<String> surnames = correspondances.get(name);
+			for(String surname : data.get(name)) {
+				surnames.add(surname);
+			}
+			
+			this.correspondances.put(name, surnames);
+		}
 		return new Answer(id, true, "Ok");
 	}
 	
@@ -60,7 +93,7 @@ public class MultiServerThread extends Thread {
 			return registerSurnames(request.getId(), ((RegisterSurnames)request).getData());
 		}
 		else if(request instanceof AddSurnames) {
-			return updateSurnames(request.getId(), ((AddSurnames)request).getData());
+			return addSurnames(request.getId(), ((AddSurnames)request).getData());
 		}
 		else {
 			return new Answer(request.getId(), false, "No such request.");
@@ -69,25 +102,37 @@ public class MultiServerThread extends Thread {
 	}
 
 	public void run() {
-		try {
-			//PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-			ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-			ObjectInputStream ois = new ObjectInputStream(
-					socket.getInputStream());
 
+		System.out.println("New client connected.");
+		
+		//while(!socket.isClosed() && socket.isBound() && socket.isConnected() &&
+		//		!socket.isInputShutdown() && !socket.isOutputShutdown()) {
+		while(!socket.isClosed()) {
+		//while(true) {
 			try {
 				Request paquet = (Request) ois.readObject();
+				System.out.println("New request received.");
+				System.out.println(answer(paquet));
 				oos.writeObject(answer(paquet));
-
+				System.out.println("Request answered.");
+	
+			} catch(EOFException e) {
+				try {
+					oos.flush();
+					oos.close();
+					ois.close();
+					socket.close();
+				} catch (IOException e1) {
+					
+				}
+				//break;
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
+				break;
+			} catch (IOException e) {
+				e.printStackTrace();
+				break;
 			}
-
-			oos.close();
-			ois.close();
-			socket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 
 	}
