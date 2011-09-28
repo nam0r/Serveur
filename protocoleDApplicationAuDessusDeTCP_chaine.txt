@@ -1,0 +1,34 @@
+****************************************************
+*												   *
+*				Internet Réseaux				   *
+*												   *
+*     Protocole D'application au dessus de TCP     *
+*												   *
+*		   Mathieu Bivert - Jordan Montel          *
+*												   *
+****************************************************
+
+Le serveur renvoie "ok" après chaque commande executée
+
+ajouter nom [surnoms]
+	si le nom n'existe pas, le créer
+	si certains surnoms existent déjà, ne pas les re-ajouter
+
+supprimer nom [surnoms]
+	si pas de surnoms spécifiés:
+	-> supprimer noms et tous les surnoms associés
+
+	sinon:
+	-> supprimer uniquement les surnoms en question s'ils existent
+
+lister [nom]
+	si un nom est spécifié:
+	-> si le nom n'existe pas: ""
+	-> sinon: nom [surnoms]
+
+	sinon:
+	-> si aucun nom n'est enregistré: ""
+	-> sinon: nom [surnoms], une association nom-surnoms par ligne
+
+numéro de port: 4242
+Lecture/Ecriture via des BufferedReader.
